@@ -1,0 +1,10 @@
+repositories {
+    /**
+     * Maven central repository, local proxy
+     *
+     * maven{
+     *   url "https://bengal.ihmc.us/nexus/content/repositories/central/"
+     * }
+     */
+     mavenCentral()
+}
