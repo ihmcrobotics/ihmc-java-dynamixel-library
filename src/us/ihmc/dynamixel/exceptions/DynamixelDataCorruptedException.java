@@ -1,12 +1,10 @@
 package us.ihmc.dynamixel.exceptions;
 
-import java.io.IOException;
-
-public class DynamixelCorruptException extends IOException
+public class DynamixelDataCorruptedException extends Exception
 {
    private static final long serialVersionUID = 8896855131967266343L;
 
-   public DynamixelCorruptException(String msg)
+   public DynamixelDataCorruptedException(String msg)
    {
       super(msg);
    }

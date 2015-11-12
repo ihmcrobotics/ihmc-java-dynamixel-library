@@ -5,8 +5,8 @@ import java.io.IOException;
 import gnu.io.NoSuchPortException;
 import us.ihmc.dynamixel.DynamixelErrorHolder;
 import us.ihmc.dynamixel.DynamixelProtocol;
-import us.ihmc.dynamixel.exceptions.DynamixelCorruptException;
-import us.ihmc.dynamixel.exceptions.DynamixelReceiveTimeoutException;
+import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
+import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
 public class PingDynamixel
 {
@@ -26,7 +26,7 @@ public class PingDynamixel
          {
             dynamixelProtocol.ping(2, dynamixelErrorHolder);
          }
-         catch (DynamixelReceiveTimeoutException |  DynamixelCorruptException e)
+         catch (DynamixelTimeoutException |  DynamixelDataCorruptedException e)
          {
             e.printStackTrace();
             continue;

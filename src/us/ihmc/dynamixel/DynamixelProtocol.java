@@ -4,10 +4,8 @@ import java.io.IOException;
 
 import gnu.io.NoSuchPortException;
 import us.ihmc.dynamixel.actuators.DynamixelControlTableElement;
-import us.ihmc.dynamixel.exceptions.DynamixelCorruptException;
-import us.ihmc.dynamixel.exceptions.DynamixelReceiveFailException;
-import us.ihmc.dynamixel.exceptions.DynamixelReceiveTimeoutException;
-import us.ihmc.dynamixel.exceptions.DynamixelTransmitFailException;
+import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
+import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
 public class DynamixelProtocol
 {
@@ -63,7 +61,7 @@ public class DynamixelProtocol
       return (byte) ~checksum;
    }
 
-   private void sendPacket() throws DynamixelTransmitFailException
+   private void sendPacket() throws IOException
    {
 
       // Set instruction packet header bytes 0xFFFF
@@ -73,37 +71,22 @@ public class DynamixelProtocol
       instructionPacket[instructionPacket[LENGTH] + 3] = calculateChecksum(instructionPacket);
 
       int transmitLength = instructionPacket[LENGTH] + 4;
-      try
-      {
-         serialPort.tx(instructionPacket, transmitLength);
-      }
-      catch (IOException e)
-      {
-         throw new DynamixelTransmitFailException(e);
-      }
+      serialPort.tx(instructionPacket, transmitLength);
    }
 
    private void receivePacket(int id, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelCorruptException
+         throws DynamixelDataCorruptedException, IOException, DynamixelTimeoutException
    {
 
       int bytesToRead = STATUS_HEADER_LENGTH;
       int offset = 0;
       while (true)
       {
-         int read;
-         try
-         {
-            read = serialPort.rx(statusPacket, offset, bytesToRead);
-         }
-         catch (IOException e)
-         {
-            throw new DynamixelReceiveFailException(e);
-         }
-
+         int read = serialPort.rx(statusPacket, offset, bytesToRead);
+         
          if (read < bytesToRead)
          {
-            throw new DynamixelReceiveTimeoutException(bytesToRead, read);
+            throw new DynamixelTimeoutException(bytesToRead, read);
          }
 
          int headerOffset = -1;
@@ -144,54 +127,46 @@ public class DynamixelProtocol
 
       if (statusPacket[ID] != id)
       {
-         throw new DynamixelCorruptException("Invalid ID on return packet");
+         throw new DynamixelDataCorruptedException("Invalid ID on return packet");
       }
 
       int statusLength = statusPacket[LENGTH] + 4;
       if (STATUS_HEADER_LENGTH < statusLength)
       {
-         int read;
-         try
-         {
-            read = serialPort.rx(statusPacket, STATUS_HEADER_LENGTH, statusLength - STATUS_HEADER_LENGTH);
-         }
-         catch (IOException e)
-         {
-            throw new DynamixelReceiveFailException(e);
-         }
+         int read = serialPort.rx(statusPacket, STATUS_HEADER_LENGTH, statusLength - STATUS_HEADER_LENGTH);
          if (read < statusLength - STATUS_HEADER_LENGTH)
          {
-            throw new DynamixelReceiveTimeoutException(bytesToRead, read);
+            throw new DynamixelTimeoutException(bytesToRead, read);
          }
       }
 
       byte checksum = calculateChecksum(statusPacket);
       if (statusPacket[statusPacket[LENGTH] + 3] != checksum)
       {
-         throw new DynamixelCorruptException("Invalid checksum on status packet");
+         throw new DynamixelDataCorruptedException("Invalid checksum on status packet");
       }
 
       errorHolder.setError(statusPacket[ERRBIT]);
 
       if (errorHolder.isChecksumError())
       {
-         throw new DynamixelCorruptException("Invalid checksum on instruction packet");
+         throw new DynamixelDataCorruptedException("Invalid checksum on instruction packet");
       }
 
       if (errorHolder.isInstructionError())
       {
-         throw new DynamixelCorruptException("Invalid instruction received by actuator");
+         throw new DynamixelDataCorruptedException("Invalid instruction received by actuator");
       }
 
       if (errorHolder.isOutOfRange())
       {
-         throw new DynamixelCorruptException("Invalid range for instruction");
+         throw new DynamixelDataCorruptedException("Invalid range for instruction");
       }
 
    }
 
    private void sendAndReceive(DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, DynamixelDataCorruptedException, IOException
    {
       sendPacket();
       if(instructionPacket[ID] != BROADCAST_ID)
@@ -211,7 +186,7 @@ public class DynamixelProtocol
    }
 
    public void ping(int id, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws  DynamixelTimeoutException, DynamixelDataCorruptedException, IOException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_PING;
@@ -221,7 +196,7 @@ public class DynamixelProtocol
    }
 
    public void action(int id, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, DynamixelDataCorruptedException, IOException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_ACTION;
@@ -231,7 +206,7 @@ public class DynamixelProtocol
    }
 
    public void reset(int id, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_RESET;
@@ -241,7 +216,7 @@ public class DynamixelProtocol
    }
 
    public int readByte(int id, DynamixelControlTableElement address, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_READ;
@@ -255,7 +230,7 @@ public class DynamixelProtocol
    }
 
    public int readWord(int id, DynamixelControlTableElement address, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_READ;
@@ -269,7 +244,7 @@ public class DynamixelProtocol
    }
 
    public void writeByte(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_WRITE;
@@ -281,7 +256,7 @@ public class DynamixelProtocol
    }
 
    public void writeWord(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_WRITE;
@@ -294,7 +269,7 @@ public class DynamixelProtocol
    }
 
    public void registerWriteByte(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_REG_WRITE;
@@ -306,7 +281,7 @@ public class DynamixelProtocol
    }
 
    public void registerWriteWord(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
-         throws DynamixelReceiveFailException, DynamixelReceiveTimeoutException, DynamixelTransmitFailException, DynamixelCorruptException
+         throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
       instructionPacket[ID] = (byte) id;
       instructionPacket[INSTRUCTION] = INST_REG_WRITE;
