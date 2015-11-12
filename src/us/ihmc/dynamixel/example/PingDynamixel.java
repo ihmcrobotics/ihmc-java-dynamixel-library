@@ -20,21 +20,31 @@ public class PingDynamixel
       
       
       
-      while(true)
+      for(int i = 0; i < (DynamixelProtocol.BROADCAST_ID & 0xFF); i++)
       {
+         Thread.sleep(50);
+
          try
          {
-            dynamixelProtocol.ping(2, dynamixelErrorHolder);
+            dynamixelProtocol.ping(i, dynamixelErrorHolder);
          }
-         catch (DynamixelTimeoutException |  DynamixelDataCorruptedException e)
+         catch (DynamixelDataCorruptedException e)
          {
-            e.printStackTrace();
+            System.err.println("Data corruption trying to reach Dynamixel " + i + ", retrying");
+            i--;
+            continue;
+         }
+         catch (DynamixelTimeoutException e)
+         {
+            System.err.println("No dynamixel at address " + i);
             continue;
          }
          
-         Thread.sleep(10);
+         System.out.println("Found dynamixel at address " + i);
+         
       }
       
+      dynamixelProtocol.close();
       
    }
 

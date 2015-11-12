@@ -3,7 +3,7 @@ package us.ihmc.dynamixel;
 import java.io.IOException;
 
 import gnu.io.NoSuchPortException;
-import us.ihmc.dynamixel.actuators.DynamixelControlTableElement;
+import us.ihmc.dynamixel.actuators.controlTables.DynamixelControlTableElement;
 import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
 import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
@@ -313,7 +313,7 @@ public class DynamixelProtocol
 
       sendAndReceive(errorHolder);
 
-      return statusPacket[PARAMETER];
+      return statusPacket[PARAMETER] & 0xFF;
    }
 
    /**
@@ -456,7 +456,7 @@ public class DynamixelProtocol
    
    private int makeWord(int lowbyte, int highbyte)
    {
-      return (highbyte << 8) + lowbyte;
+      return ((highbyte & 0xFF) << 8) + (lowbyte & 0xFF);
    }
 
    private byte highByte(int value)

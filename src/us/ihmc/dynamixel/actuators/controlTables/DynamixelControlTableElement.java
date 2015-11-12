@@ -1,4 +1,4 @@
-package us.ihmc.dynamixel.actuators;
+package us.ihmc.dynamixel.actuators.controlTables;
 
 import us.ihmc.dynamixel.Access;
 

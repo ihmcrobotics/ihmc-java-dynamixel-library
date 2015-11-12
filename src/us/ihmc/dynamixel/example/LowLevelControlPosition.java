@@ -5,12 +5,12 @@ import java.io.IOException;
 import gnu.io.NoSuchPortException;
 import us.ihmc.dynamixel.DynamixelErrorHolder;
 import us.ihmc.dynamixel.DynamixelProtocol;
-import us.ihmc.dynamixel.actuators.DynamixelControlTableElement;
-import us.ihmc.dynamixel.actuators.MX106ControlTable;
+import us.ihmc.dynamixel.actuators.controlTables.DynamixelControlTableElement;
+import us.ihmc.dynamixel.actuators.controlTables.MX106ControlTable;
 import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
 import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
-public class ControlPosition
+public class LowLevelControlPosition
 {
 
    public static void main(String[] args) throws IOException, NoSuchPortException, InterruptedException
