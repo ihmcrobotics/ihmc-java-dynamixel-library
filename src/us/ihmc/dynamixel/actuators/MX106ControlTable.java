@@ -2,6 +2,13 @@ package us.ihmc.dynamixel.actuators;
 
 import us.ihmc.dynamixel.Access;
 
+/**
+ * This class describes the MX106 Control Table as provided on 
+ * http://support.robotis.com/en/product/dynamixel/mx_series/mx-106.htm
+ * 
+ * <p>Use the Low byte values to address a 2-byte value (names ending with L).</p>
+ *
+ */
 public enum MX106ControlTable implements DynamixelControlTableElement
 {
 

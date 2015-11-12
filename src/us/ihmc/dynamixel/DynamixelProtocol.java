@@ -7,11 +7,31 @@ import us.ihmc.dynamixel.actuators.DynamixelControlTableElement;
 import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
 import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
+/**
+ * Implementation of the Dynamixel Communications 1.0 serial protocol.
+ * 
+ * <p>This class implements the serial wire protocol as described on
+ * http://support.robotis.com/en/techsupport_eng.htm#product/dynamixel/dxl_communication.htm<p>
+ * 
+ * <p>Functions for all command except INST_SYNC_WRITE have been provided.</p>
+ * 
+ * <p>Communication errors are reported trough exceptions. DynamixelTimeoutException 
+ * and DynamixelDataCorruptedException can be recovered from. IOExceptions require reinitialization.
+ * 
+ * <p>This code is based on the C source code provided by Robotis. 
+ *  http://support.robotis.com/en/techsupport_eng.htm#software/dynamixelsdk.htm
+ * Copyright (c) 2014, ROBOTIS Inc. All rights reserved.</p>
+
+ *
+ */
 public class DynamixelProtocol
 {
    protected final static int MAXNUM_TXPARAM = 150;
    protected final static int MAXNUM_RXPARAM = 60;
 
+   /**
+    * The ID used to broadcast to all Dynamixels. No return message will be provided.
+    */
    public final static byte BROADCAST_ID = (byte) 254; 
    
    /*
@@ -45,6 +65,16 @@ public class DynamixelProtocol
    private final byte[] instructionPacket = new byte[MAXNUM_TXPARAM + 10];
    private final byte[] statusPacket = new byte[MAXNUM_RXPARAM + 10];
 
+   /**
+    * Create a new DynamixelProtocol.
+    * 
+    * Call open() to start sending and receiving data
+    * 
+    * @param port Serial port to connect to
+    * @param baudRate Has to match the baudrate of the dynamixels on the bus
+    * 
+    * @throws NoSuchPortException If the serial port cannot be found
+    */
    public DynamixelProtocol(String port, int baudRate) throws NoSuchPortException
    {
       this.serialPort = new DynamixelSerialPort(port, baudRate);
@@ -175,16 +205,36 @@ public class DynamixelProtocol
       }
    }
 
+   /**
+    * Open the serial port and prepare for communication
+    * 
+    * @throws IOException when the serial port cannot be opened
+    */
    public void open() throws IOException
    {
       serialPort.open();
    }
 
+   /**
+    * Close the connection. The connection can be reopened after calling
+    * close()
+    */
    public void close()
    {
       serialPort.close();
    }
 
+   
+   /**
+    * Ping a Dynamixel. This function will return cleanly when the Dynamixel is online.
+    * 
+    * @param id 0-253 
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void ping(int id, DynamixelErrorHolder errorHolder)
          throws  DynamixelTimeoutException, DynamixelDataCorruptedException, IOException
    {
@@ -195,6 +245,19 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   /**
+    * Send an action message. 
+    * 
+    * <p>This will execute the command sent by registerWriteByte or registerWriteWord. 
+    * Use in combination with BROADCAST_ID to synchronize execution.</p> 
+    * 
+    * @param id 0-254 
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void action(int id, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, DynamixelDataCorruptedException, IOException
    {
@@ -205,6 +268,18 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   /**
+    * Factory reset of the Dynamixel. Will reset the ID 
+    * 
+    * <p>A factory reset will reset the ID back to 1. After calling this function, you probably need to setup the Dynamixel again.</p> 
+    * 
+    * @param id 0-254 
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void reset(int id, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -215,6 +290,18 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   /**
+    * Read a single byte from a Dynamixel register. 
+    * 
+    * 
+    * @param id 0-254 
+    * @param address The address to read. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public int readByte(int id, DynamixelControlTableElement address, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -229,6 +316,20 @@ public class DynamixelProtocol
       return statusPacket[PARAMETER];
    }
 
+   /**
+    * Read two bytes from a Dynamixel register as an 16 bit integer
+    * 
+    * <p>Pass in the low byte address to get the whole value</p>
+    * 
+    * 
+    * @param id 0-254 
+    * @param address The address to read. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public int readWord(int id, DynamixelControlTableElement address, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -243,6 +344,20 @@ public class DynamixelProtocol
       return makeWord(statusPacket[PARAMETER], statusPacket[PARAMETER + 1]);
    }
 
+   
+   /**
+    * Write a single byte to a Dynamixel register
+    * 
+    * 
+    * @param id 0-254 
+    * @param address The address to write. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param value The value to write, unsigned byte in the range 0-255.
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void writeByte(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -255,6 +370,20 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   /**
+    * Write a single 16 bit integer to a Dynamixel register
+    * 
+    * <p>Pass in the low byte address to write the whole value</p>
+    * 
+    * @param id 0-254 
+    * @param address The address to write. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param value The value to write, unsigned integer in the range 0-65535.
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void writeWord(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -268,6 +397,22 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   
+   /**
+    * Send a single byte to a Dynamixel, but do not write to the register. Call action() to write.
+    * 
+    * <p>Use this function to synchronize execution of multiple commands on multiple Dynamixels</p>
+    * 
+    * 
+    * @param id 0-254 
+    * @param address The address to write. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param value The value to write, unsigned byte in the range 0-255.
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void registerWriteByte(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
@@ -280,6 +425,22 @@ public class DynamixelProtocol
       sendAndReceive(errorHolder);
    }
 
+   /**
+    * Write a single 16 bit integer to a Dynamixel register. Call action() to write.
+    * 
+    * <p>Use this function to synchronize execution of multiple commands on multiple Dynamixels</p>
+ 
+    * <p>Pass in the low byte address to write the whole value</p>
+    * 
+    * @param id 0-254 
+    * @param address The address to write. An element from the Dynamixel Control Table enum in us.ihmc.dynamixel.actuators, not null
+    * @param value The value to write, unsigned integer in the range 0-65535.
+    * @param errorHolder Holder to provide the return status from the Dynamixel, not null
+    * 
+    * @throws DynamixelTimeoutException if no response has been received from the Dynamixel
+    * @throws DynamixelDataCorruptedException if unexpected data has been received from the Dynamixel. Check for no conflicting IDs 
+    * @throws IOException if the connection to the serial port died
+    */
    public void registerWriteWord(int id, DynamixelControlTableElement address, int value, DynamixelErrorHolder errorHolder)
          throws DynamixelTimeoutException, IOException, DynamixelDataCorruptedException
    {
