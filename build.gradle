@@ -38,6 +38,12 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.8'
 }
 
+run {
+    if(project.hasProperty('port')){
+        args project.port
+    }
+}
+
 publishing {
 	publications {
 		mavenJava(MavenPublication) {

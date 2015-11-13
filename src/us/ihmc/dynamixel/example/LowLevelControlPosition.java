@@ -14,7 +14,19 @@ public class LowLevelControlPosition
 
    public static void main(String[] args) throws IOException, NoSuchPortException, InterruptedException
    {
-      DynamixelProtocol dynamixelProtocol = new DynamixelProtocol("/dev/ttyUSB0", 1000000);
+      String port = "/dev/ttyUSB0";
+      int baudRate = 1000000;
+      if(args.length > 0)
+      {
+         port = args[0];
+      }
+      if(args.length > 1)
+      {
+         baudRate = Integer.parseInt(args[1]);
+      }
+      
+      
+      DynamixelProtocol dynamixelProtocol = new DynamixelProtocol(port, baudRate);
       dynamixelProtocol.open();
       
       DynamixelErrorHolder dynamixelErrorHolder = new DynamixelErrorHolder();
