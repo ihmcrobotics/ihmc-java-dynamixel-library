@@ -1,5 +1,6 @@
 package us.ihmc.dynamixel;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,9 +54,9 @@ class DynamixelSerialPort
          serial.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
          serial.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
          serial.enableReceiveTimeout(100);
+         serial.disableReceiveThreshold();
 //         serial.disableReceiveTimeout();
-         serial.enableReceiveThreshold(DynamixelProtocol.MAXNUM_RXPARAM);
-         rxStream = serial.getInputStream();
+         rxStream = new BufferedInputStream(serial.getInputStream());
          txStream = serial.getOutputStream();
       }
       catch (PortInUseException e)
@@ -91,6 +92,11 @@ class DynamixelSerialPort
    public void tx(byte[] packet, int length) throws IOException
    {
       txStream.write(packet, 0, length);
+   }
+   
+   public int read() throws IOException
+   {
+      return rxStream.read();
    }
    
    public int rx(byte[] packet, int offset, int length) throws IOException

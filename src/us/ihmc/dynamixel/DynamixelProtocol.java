@@ -109,55 +109,44 @@ public class DynamixelProtocol
    {
 
       int bytesToRead = STATUS_HEADER_LENGTH;
-      int offset = 0;
-      while (true)
+      int bytesRead = 0;
+      while(bytesRead < bytesToRead)
       {
-         int read = serialPort.rx(statusPacket, offset, bytesToRead);
+         int b = serialPort.read();
+         if(b == -1)
+         {
+            throw new DynamixelTimeoutException(1, 0);
+         }
          
-         if (read < bytesToRead)
+         
+         switch(bytesRead)
          {
-            throw new DynamixelTimeoutException(bytesToRead, read);
-         }
-
-         int headerOffset = -1;
-         for (int i = 0; i < STATUS_HEADER_LENGTH - 1; i++)
-         {
-            if (statusPacket[i] == (byte) 0xFF && statusPacket[i + 1] == (byte) 0xFF)
+         case 0:
+         case 1:
+            if(b != 0xFF)
             {
-               headerOffset = i;
-               break;
+               System.out.println("CORRUPTION");
+               bytesRead = 0; // NON-header byte, reset
+               continue;
             }
-         }
-
-         if (headerOffset == 0)
-         {
+            else
+               System.out.println("HEADER BYTE");
+            break;
+         case LENGTH:
+            bytesToRead = b + 4;
+            System.out.println("PACKET LENGTH: " + bytesToRead);
             break;
          }
-
-         bytesToRead = STATUS_HEADER_LENGTH - headerOffset - 1;
-         offset = headerOffset + 1;
-
-         if (headerOffset != -1)
-         {
-            System.arraycopy(statusPacket, headerOffset, statusPacket, 0, STATUS_HEADER_LENGTH - headerOffset);
-
-         }
-
+         statusPacket[bytesRead] = (byte) b;
+         bytesRead++;
+         
       }
+      
+      
 
       if (statusPacket[ID] != id)
       {
          throw new DynamixelDataCorruptedException("Invalid ID on return packet");
-      }
-
-      int statusLength = statusPacket[LENGTH] + 4;
-      if (STATUS_HEADER_LENGTH < statusLength)
-      {
-         int read = serialPort.rx(statusPacket, STATUS_HEADER_LENGTH, statusLength - STATUS_HEADER_LENGTH);
-         if (read < statusLength - STATUS_HEADER_LENGTH)
-         {
-            throw new DynamixelTimeoutException(bytesToRead, read);
-         }
       }
 
       byte checksum = calculateChecksum(statusPacket);
