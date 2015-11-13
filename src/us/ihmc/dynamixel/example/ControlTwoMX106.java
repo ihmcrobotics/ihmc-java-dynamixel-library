@@ -29,7 +29,7 @@ public class ControlTwoMX106
       dynamixelProtocol.open();
 
       
-//      MX106 a = new MX106(1, dynamixelProtocol);
+      MX106 a = new MX106(1, dynamixelProtocol);
       MX106 b = new MX106(2, dynamixelProtocol);
       
       while (true)
@@ -40,10 +40,17 @@ public class ControlTwoMX106
          try
          {
             long startTime = System.nanoTime();
-            b.setPosition(desiredPositionB);
+            a.setPosition(desiredPositionA);
             long readTime = System.nanoTime() - startTime;
             
+            System.out.println("Position error: " + (desiredPositionA - a.readPosition()) + ", temperature: " + a.readTemperature() + ", load: " + a.readLoad() + ", read time: " + readTime);
+
+            startTime = System.nanoTime();
+            b.setPosition(desiredPositionB);
+            readTime = System.nanoTime() - startTime;
+            
             System.out.println("Position error: " + (desiredPositionB - b.readPosition()) + ", temperature: " + b.readTemperature() + ", load: " + b.readLoad() + ", read time: " + readTime);
+            
          }
          catch (DynamixelTimeoutException e)
          {
