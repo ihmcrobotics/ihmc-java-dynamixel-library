@@ -137,20 +137,10 @@ public class DynamixelProtocol
          bytesToRead = STATUS_HEADER_LENGTH - headerOffset - 1;
          offset = headerOffset + 1;
 
-         System.out.println("READING ANOTHER " + bytesToRead);
-         System.out.println("READ OFFSET " + offset);
-
          if (headerOffset != -1)
          {
-            System.out.println("MOVING DATA");
             System.arraycopy(statusPacket, headerOffset, statusPacket, 0, STATUS_HEADER_LENGTH - headerOffset);
 
-            System.out.println(statusPacket[0]);
-            System.out.println(statusPacket[1]);
-            System.out.println(statusPacket[2]);
-            System.out.println(statusPacket[3]);
-            System.out.println(statusPacket[4]);
-            System.out.println(statusPacket[5]);
          }
 
       }
@@ -177,21 +167,6 @@ public class DynamixelProtocol
       }
 
       errorHolder.setError(statusPacket[ERRBIT]);
-
-      if (errorHolder.isChecksumError())
-      {
-         throw new DynamixelDataCorruptedException("Invalid checksum on instruction packet");
-      }
-
-      if (errorHolder.isInstructionError())
-      {
-         throw new DynamixelDataCorruptedException("Invalid instruction received by actuator");
-      }
-
-      if (errorHolder.isOutOfRange())
-      {
-         throw new DynamixelDataCorruptedException("Invalid range for instruction");
-      }
 
    }
 
