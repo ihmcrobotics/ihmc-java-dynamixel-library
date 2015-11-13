@@ -1,10 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
+apply plugin: 'application'
 apply from: 'gradleScripts/util.gradle'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 version = '0.1'
+
+mainClassName = "us.ihmc.dynamixel.example.PingDynamixel"
 
 setupDefaultDirectoryStructure()
 
@@ -31,6 +34,9 @@ jar {
    }
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.8'
+}
 
 publishing {
 	publications {

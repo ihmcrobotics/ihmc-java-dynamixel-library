@@ -27,9 +27,11 @@ public class ControlTwoMX106
          
          try
          {
+            long startTime = System.nanoTime();
             b.setPosition(desiredPositionB);
+            long readTime = System.nanoTime() - startTime;
             
-            System.out.println("Position error: " + (desiredPositionB - b.readPosition()) + ", temperature: " + b.readTemperature() + ", load: " + b.readLoad());
+            System.out.println("Position error: " + (desiredPositionB - b.readPosition()) + ", temperature: " + b.readTemperature() + ", load: " + b.readLoad() + ", read time: " + readTime);
          }
          catch (DynamixelTimeoutException e)
          {

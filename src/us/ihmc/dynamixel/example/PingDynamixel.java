@@ -5,6 +5,7 @@ import java.io.IOException;
 import gnu.io.NoSuchPortException;
 import us.ihmc.dynamixel.DynamixelErrorHolder;
 import us.ihmc.dynamixel.DynamixelProtocol;
+import us.ihmc.dynamixel.actuators.controlTables.MX106ControlTable;
 import us.ihmc.dynamixel.exceptions.DynamixelDataCorruptedException;
 import us.ihmc.dynamixel.exceptions.DynamixelTimeoutException;
 
@@ -25,6 +26,8 @@ public class PingDynamixel
          try
          {
             dynamixelProtocol.ping(i, dynamixelErrorHolder);
+            
+//            dynamixelProtocol.writeByte(i, MX106ControlTable.ReturnDelayTime, 0, dynamixelErrorHolder);
          }
          catch (DynamixelDataCorruptedException e)
          {
