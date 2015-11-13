@@ -144,10 +144,6 @@ public class DynamixelProtocol
          
       }
       
-      System.out.println(System.nanoTime() - startTime);
-
-      
-      
 
       if (statusPacket[ID] != id)
       {

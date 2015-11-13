@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
-import gnu.io.RXTXPort;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
@@ -20,7 +20,7 @@ class DynamixelSerialPort
    private final CommPortIdentifier identifier;
    private final int baudRate;
 
-   private RXTXPort serial;
+   private SerialPort serial;
    private InputStream rxStream;
    private OutputStream txStream;
 
@@ -51,13 +51,21 @@ class DynamixelSerialPort
 
       try
       {
-         serial = identifier.open(getClass().getSimpleName(), OPEN_TIMEOUT);
-         serial.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-         serial.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-         serial.enableReceiveTimeout(1); // Transfer time is 12us/byte. Waiting 1ms is plenty
-         serial.disableReceiveThreshold();
-         rxStream = new BufferedInputStream(serial.getInputStream());
-         txStream = serial.getOutputStream();
+         CommPort commPort = identifier.open(getClass().getSimpleName(), OPEN_TIMEOUT); 
+         if(commPort instanceof SerialPort)
+         {
+            serial = (SerialPort) commPort;
+            serial.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+            serial.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+            serial.enableReceiveTimeout(1); // Transfer time is 12us/byte. Waiting 1ms is plenty
+            serial.disableReceiveThreshold();
+            rxStream = new BufferedInputStream(serial.getInputStream());
+            txStream = serial.getOutputStream();
+         }
+         else
+         {
+            throw new IOException(identifier + " is not a serial port");
+         }
       }
       catch (PortInUseException e)
       {

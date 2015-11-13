@@ -22,8 +22,6 @@ public class PingDynamixel
       
       for(int i = 0; i < (DynamixelProtocol.BROADCAST_ID & 0xFF); i++)
       {
-         Thread.sleep(50);
-
          try
          {
             dynamixelProtocol.ping(i, dynamixelErrorHolder);
