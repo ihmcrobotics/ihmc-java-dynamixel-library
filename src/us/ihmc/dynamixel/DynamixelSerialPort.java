@@ -14,48 +14,48 @@ import gnu.io.UnsupportedCommOperationException;
 
 class DynamixelSerialPort
 {
-   private final static int TIMEOUT = 2000;
-   
+   private final static int OPEN_TIMEOUT = 2000;
+   private final static long nano = 1000000000;
+
    private final CommPortIdentifier identifier;
    private final int baudRate;
-   
+
    private RXTXPort serial;
    private InputStream rxStream;
    private OutputStream txStream;
-   
+
    private boolean connected = false;
-   
+
    public DynamixelSerialPort(String port, int baudRate) throws NoSuchPortException
    {
       if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1))
       {
-          System.setProperty("gnu.io.rxtx.SerialPorts", port);
+         System.setProperty("gnu.io.rxtx.SerialPorts", port);
       }
       this.identifier = CommPortIdentifier.getPortIdentifier(port);
       this.baudRate = baudRate;
    }
-   
+
    public boolean isConnected()
    {
       return connected;
    }
-   
+
    public void open() throws IOException
    {
-      if(isConnected())
+      if (isConnected())
       {
-         System.err.println("Already connected");
+         System.err.println("Already connected to dynamixel");
          return;
       }
-      
+
       try
       {
-         serial = identifier.open(getClass().getSimpleName(), TIMEOUT);
+         serial = identifier.open(getClass().getSimpleName(), OPEN_TIMEOUT);
          serial.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
          serial.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-         serial.enableReceiveTimeout(100);
+         serial.enableReceiveTimeout(1); // Transfer time is 12us/byte. Waiting 1ms is plenty
          serial.disableReceiveThreshold();
-//         serial.disableReceiveTimeout();
          rxStream = new BufferedInputStream(serial.getInputStream());
          txStream = serial.getOutputStream();
       }
@@ -67,12 +67,11 @@ class DynamixelSerialPort
       {
          throw new IOException("Cannot set serial port parameters: " + e.getMessage());
       }
-      
+
       connected = true;
-      
 
    }
-   
+
    public void close()
    {
       try
@@ -88,25 +87,26 @@ class DynamixelSerialPort
       serial.close();
       connected = false;
    }
-   
+
    public void tx(byte[] packet, int length) throws IOException
    {
       txStream.write(packet, 0, length);
+      txStream.flush();
    }
-   
+
    public int read() throws IOException
    {
       return rxStream.read();
    }
-   
+
    public int rx(byte[] packet, int offset, int length) throws IOException
    {
       return rxStream.read(packet, offset, length);
    }
-   
+
    public void flush() throws IOException
    {
       rxStream.skip(rxStream.available());
    }
-   
+
 }

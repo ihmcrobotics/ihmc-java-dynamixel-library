@@ -8,9 +8,9 @@ public class DynamixelTimeoutException extends Exception
 {
    private static final long serialVersionUID = 8896855131967266343L;
 
-   public DynamixelTimeoutException(int bytesToRead, int bytesRead)
+   public DynamixelTimeoutException()
    {
-      super("Expected " + bytesToRead + " bytes, got " + bytesRead);
+      super();
    }
 
 }

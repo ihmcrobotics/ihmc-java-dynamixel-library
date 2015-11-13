@@ -29,6 +29,7 @@ public class DynamixelProtocol
    protected final static int MAXNUM_TXPARAM = 150;
    protected final static int MAXNUM_RXPARAM = 60;
 
+   public final static long READ_TIMEOUT = 5000000; // 5ms
    /**
     * The ID used to broadcast to all Dynamixels. No return message will be provided.
     */
@@ -107,17 +108,22 @@ public class DynamixelProtocol
    private void receivePacket(int id, DynamixelErrorHolder errorHolder)
          throws DynamixelDataCorruptedException, IOException, DynamixelTimeoutException
    {
-
       int bytesToRead = STATUS_HEADER_LENGTH;
       int bytesRead = 0;
+      
+      
+      long startTime = System.nanoTime();
       while(bytesRead < bytesToRead)
       {
          int b = serialPort.read();
          if(b == -1)
          {
-            throw new DynamixelTimeoutException(1, 0);
-         }
-         
+            if((System.nanoTime() - startTime) > READ_TIMEOUT)
+            {
+               throw new DynamixelTimeoutException();
+            }
+            continue;
+         }         
          
          switch(bytesRead)
          {
@@ -125,22 +131,21 @@ public class DynamixelProtocol
          case 1:
             if(b != 0xFF)
             {
-               System.out.println("CORRUPTION");
                bytesRead = 0; // NON-header byte, reset
                continue;
             }
-            else
-               System.out.println("HEADER BYTE");
             break;
          case LENGTH:
             bytesToRead = b + 4;
-            System.out.println("PACKET LENGTH: " + bytesToRead);
             break;
          }
          statusPacket[bytesRead] = (byte) b;
          bytesRead++;
          
       }
+      
+      System.out.println(System.nanoTime() - startTime);
+
       
       
 

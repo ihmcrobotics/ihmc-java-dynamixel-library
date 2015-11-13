@@ -29,7 +29,7 @@ public class ControlTwoMX106
          {
             b.setPosition(desiredPositionB);
             
-            System.out.println("Error: " + (desiredPositionB - b.readPosition()) + ", temperature: " + b.readTemperature() + ", load: " + b.readLoad());
+            System.out.println("Position error: " + (desiredPositionB - b.readPosition()) + ", temperature: " + b.readTemperature() + ", load: " + b.readLoad());
          }
          catch (DynamixelTimeoutException e)
          {
@@ -40,7 +40,7 @@ public class ControlTwoMX106
             e.printStackTrace();
          }
          
-         Thread.sleep(20);
+         Thread.sleep(10);
       }
    }
 }
