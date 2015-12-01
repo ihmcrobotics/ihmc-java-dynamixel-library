@@ -35,7 +35,7 @@ public class ControlTwoMX106
       while (true)
       {
          double desiredPositionA = Math.PI + (Math.PI * Math.sin(System.nanoTime()/1e9));
-         double desiredPositionB = Math.PI + (Math.PI * Math.cos(1 * System.nanoTime()/1e9));
+         double desiredPositionB = Math.PI - (Math.PI * Math.sin(1 * System.nanoTime()/1e9));
          
          try
          {

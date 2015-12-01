@@ -99,7 +99,7 @@ class DynamixelSerialPort
    public void tx(byte[] packet, int length) throws IOException
    {
       txStream.write(packet, 0, length);
-      txStream.flush();
+      //txStream.flush();
    }
 
    public int read() throws IOException
