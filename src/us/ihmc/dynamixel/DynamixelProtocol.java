@@ -137,6 +137,10 @@ public class DynamixelProtocol
             break;
          case LENGTH:
             bytesToRead = b + 4;
+            if(bytesToRead > statusPacket.length)
+            {
+               throw new DynamixelDataCorruptedException("Got length " + bytesToRead + ", which is more than ever expected.");
+            }
             break;
          }
          statusPacket[bytesRead] = (byte) b;
