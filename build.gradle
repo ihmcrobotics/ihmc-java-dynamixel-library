@@ -49,15 +49,15 @@ publishing {
 		mavenJava(MavenPublication) {
 
 			groupId 'us.ihmc'
-			artifactId 'IHMCJavaDynamixelLibrary'
+			artifactId project.name
 			version "$version"
 			from components.java
 			
 			pom.withXml {
                             asNode().children().last() + {
                                 resolveStrategy = Closure.DELEGATE_FIRST
-                                name 'IHMCJavaDynamixelLibrary'
-                                url 'https://stash.ihmc.us/projects/ROB/repos/ihmc-java-dynamixel-library'
+                                name project.name
+                                url 'https://github.com/ihmcrobotics/ihmc-java-dynamixel-library'
                                 licenses {
                                     license {
                                         name 'The Apache Software License, Version 2.0'
