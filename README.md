@@ -8,6 +8,19 @@ A higher level object orientated interface for actuators has been provided in us
 
 JavaDoc is provided for us.ihmc.dynamixel.DynamixelProtocol and us.ihmc.dynamixel.actuarors.MX106.
 
+## Usage
+The library is available as a maven repository. To add to your gradle project, use the following snippet in your build.gradle.
+```
+repositories {
+    maven {
+        url  "http://dl.bintray.com/ihmcrobotics/maven-release"
+    }
+}
+	
+dependencies {
+	   compile group: 'us.ihmc', name: 'IHMCJavaDynamixelLibrary', version: '0.1.1'
+}
+```
 
 ## Examples
 See the examples in us.ihmc.dynamixel.example
